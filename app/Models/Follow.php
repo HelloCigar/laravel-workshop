@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,15 +18,18 @@ class Follow extends Model
         'following_profile_id',
     ];
 
-    public function follower() : BelongsTo {
+    public function follower(): BelongsTo
+    {
         return $this->belongsTo(Profile::class, 'follower_profile_id');
     }
 
-    public function following() : BelongsTo {
+    public function following(): BelongsTo
+    {
         return $this->belongsTo(Profile::class, 'following_profile_id');
     }
 
-    public static function createFollow(Profile $follower, Profile $following) : self {
+    public static function createFollow(Profile $follower, Profile $following): self
+    {
         if ($follower->id === $following->id) {
             throw new \InvalidArgumentException('A profile cannot follow itself.');
         }
@@ -35,7 +40,8 @@ class Follow extends Model
         ]);
     }
 
-    public static function removeFollow(Profile $follower, Profile $following) : bool {
+    public static function removeFollow(Profile $follower, Profile $following): bool
+    {
         if ($follower->id === $following->id) {
             throw new \InvalidArgumentException('A profile cannot unfollow itself.');
         }

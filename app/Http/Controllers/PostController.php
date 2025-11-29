@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreatePostRequest;
@@ -8,82 +10,90 @@ use App\Models\Post;
 use App\Models\Profile;
 use App\Queries\PostThreadQuery;
 use App\Queries\TimelineQuery;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         $profile = Auth::user()->profile;
 
         $posts = TimelineQuery::forViewer($profile)->get();
 
-        return view('posts.index', compact('profile', 'posts'));
+        return view('posts.index', ['profile' => $profile, 'posts' => $posts]);
     }
 
+    public function show(Profile $profile, Post $post)
+    {
 
-    public function show(Profile $profile, Post $post) {
-        
         $post = PostThreadQuery::for($post, Auth::user()?->profile)->load();
 
-        return view('posts.show', compact('post'));
+        return view('posts.show', ['post' => $post]);
     }
 
-    public function store(CreatePostRequest $request) {
+    public function store(CreatePostRequest $createPostRequest)
+    {
         $profile = Auth::user()->profile;
 
-        $post = Post::publish($profile, $request->content);
+        Post::publish($profile, $createPostRequest->content);
 
         return redirect(route('posts.index'));
     }
 
-    public function reply(Profile $profile, Post $post, CreatePostRequest $request) {
+    public function reply(Profile $profile, Post $post, CreatePostRequest $createPostRequest)
+    {
         $currentProfile = Auth::user()->profile;
 
-        $post = Post::reply($currentProfile, $post, $request->content);
-        
+        Post::reply($currentProfile, $post, $createPostRequest->content);
+
         return redirect(route('posts.index'));
     }
 
-    public function repost(Profile $profile, Post $post) {
+    public function repost(Profile $profile, Post $post)
+    {
         $currentProfile = Auth::user()->profile;
 
-        $post = Post::repost($currentProfile, $post);
-        
+        Post::repost($currentProfile, $post);
+
         return redirect(route('posts.index'));
     }
 
-    public function quote(Profile $profile, Post $post, CreatePostRequest $request) {
+    public function quote(Profile $profile, Post $post, CreatePostRequest $createPostRequest)
+    {
         $currentProfile = Auth::user()->profile;
 
-        $post = Post::repost($currentProfile, $post, $request->content);
-        
+        Post::repost($currentProfile, $post, $createPostRequest->content);
+
         return redirect(route('posts.index'));
     }
 
-    public function like(Profile $profile, Post $post) {
+    public function like(Profile $profile, Post $post)
+    {
         $currentProfile = Auth::user()->profile;
 
         $like = Like::createLike($currentProfile, $post);
-        
-        return response()->json(compact('like'));
+
+        return response()->json(['like' => $like]);
     }
 
-    public function unlike(Profile $profile, Post $post) {
+    public function unlike(Profile $profile, Post $post)
+    {
         $currentProfile = Auth::user()->profile;
 
         $success = Like::removeLike($currentProfile, $post);
-        
-        return response()->json(compact('success'));
+
+        return response()->json(['success' => $success]);
     }
 
-    public function destroy(Profile $profile, Post $post) {
+    public function destroy(Profile $profile, Post $post)
+    {
         $currentProfile = Auth::user()->profile;
         $success = false;
 
         if ($currentProfile->id === $profile->id) {
             $success = $post->delete() > 0;
-            return response()->json(compact('success'));
+
+            return response()->json(['success' => $success]);
         }
 
         $repost = $post
@@ -91,11 +101,12 @@ class PostController extends Controller
             ->where('profile_id', $currentProfile->id)
             ->first();
 
-        if (!is_null($repost)) {
+        if (! is_null($repost)) {
             $success = $repost->delete() > 0;
-            return response()->json(compact('success'));
+
+            return response()->json(['success' => $success]);
         }
 
-        return response()->json(compact('success'));
+        return response()->json(['success' => $success]);
     }
 }

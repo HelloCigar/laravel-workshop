@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,24 +23,28 @@ class Profile extends Model
         'avatar_url',
     ];
 
-
-    public function user() : BelongsTo {
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function posts() : HasMany {
+    public function posts(): HasMany
+    {
         return $this->hasMany(Post::class);
     }
 
-    public function topLevelPosts() : HasMany {
+    public function topLevelPosts(): HasMany
+    {
         return $this->hasMany(Post::class)->whereNull('parent_id');
     }
 
-    public function likes() : HasMany {
+    public function likes(): HasMany
+    {
         return $this->hasMany(Like::class);
     }
 
-    public function followers() : BelongsToMany {
+    public function followers(): BelongsToMany
+    {
         return $this->belongsToMany(
             Profile::class,
             'follows',
@@ -47,7 +53,8 @@ class Profile extends Model
         );
     }
 
-    public function followings() : BelongsToMany {
+    public function followings(): BelongsToMany
+    {
         return $this->belongsToMany(
             Profile::class,
             'follows',
